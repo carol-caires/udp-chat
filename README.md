@@ -7,7 +7,7 @@ It consists in two parts, the [client](client/README.md) and the [server](server
 ## Roadmap
 
 1. General
-   - [ ] Define architecture
+   - [x] Define basic architecture
    - [ ] Create Redis infrastructure ([1](https://aws.amazon.com/pt/elasticache/redis/]))
 2. Server
    - [ ] Create base project
