@@ -6,16 +6,17 @@ import (
 	"github.com/carol-caires/udp-chat/configs"
 	"github.com/carol-caires/udp-chat/internal"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main () {
-	log := configs.InitLogs()
+	log.Info().Msg("starting...")
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal().Err(err).Msg("Error loading .env file")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -30,11 +31,10 @@ func main () {
 
 	var address = fmt.Sprintf("%s:%d", configs.GetHost(), configs.GetPort())
 
-	server := internal.NewServer(&log)
+	log.Info().Msgf("running UDP server on address %s", address)
+	server := internal.NewServer()
 	err = server.Listen(ctx, address)
 	if err != nil && err != context.Canceled {
-		log.Fatal("error starting UDP server: ", err.Error())
+		log.Fatal().Err(err).Msg("error starting UDP server")
 	}
-
-	log.Info("running UDP server on: ", address)
 }
