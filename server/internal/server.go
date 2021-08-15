@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/carol-caires/udp-chat/configs"
+	"github.com/carol-caires/udp-chat/internal/utils/cache"
 	"github.com/rs/zerolog/log"
 	"net"
 	"time"
 )
 
-type Server struct {}
+type Server struct {
+	cache cache.Client
+}
 
-func NewServer () Server {
-	return Server{}
+func NewServer (cache cache.Client) Server {
+	return Server{cache}
 }
 
 func (s *Server) Listen(ctx context.Context, address string) (err error) {
@@ -34,6 +37,8 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 				doneChan <- err
 				return
 			}
+
+			// todo: write message in cache
 
 			log.Debug().Msgf("packet-received: bytes=%d from=%s", bytesRead, addr.String())
 

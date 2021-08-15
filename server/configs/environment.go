@@ -43,3 +43,11 @@ func GetMaxBufferSize() int {
 	return buffer
 }
 
+func GetRedisAddr() string {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr != "" {
+		return addr
+	}
+	panic("the HOST environment variable must be declared")
+}
+
