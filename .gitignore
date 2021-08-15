@@ -15,9 +15,7 @@
 # IDE files
 .idea
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Draw.io zone identifier file
+*.Identifier
 
-### Go Patch ###
-/vendor/
-/Godeps/
+# Dependency directories (remove the comment below to include it)
