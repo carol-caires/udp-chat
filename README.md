@@ -15,6 +15,7 @@ It consists in two parts, the [client](client/README.md) and the [server](server
    - [x] Receive messages from client
    - [x] Broadcast messages to clients
    - [x] Save messages on Redis
+     - [x] Save connected clients
    - [x] Read messages from Redis
    - [ ] Delete messages
    - [ ] Flush DB when no one is connected to chat server anymore
@@ -22,6 +23,8 @@ It consists in two parts, the [client](client/README.md) and the [server](server
    - [ ] Integration testing
 3. Client
    - [ ] Create base project
+     - [ ] Create graphical interface
+   - [ ] Create BFF
    - [ ] Connect to chat server
    - [ ] Read messages from Redis
    - [ ] Send messages to server

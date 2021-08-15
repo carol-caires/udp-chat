@@ -18,4 +18,7 @@
 # Draw.io zone identifier file
 *.Identifier
 
+# Redis dump
+*.rdb
+
 # Dependency directories (remove the comment below to include it)
