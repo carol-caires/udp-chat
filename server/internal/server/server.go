@@ -1,9 +1,10 @@
-package internal
+package server
 
 import (
 	"context"
 	"fmt"
 	"github.com/carol-caires/udp-chat/configs"
+	"github.com/carol-caires/udp-chat/internal/models"
 	"github.com/carol-caires/udp-chat/internal/utils/cache"
 	"github.com/rs/zerolog/log"
 	"net"
@@ -38,9 +39,15 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 				return
 			}
 
-			// todo: write message in cache
-
 			log.Debug().Msgf("packet-received: bytes=%d from=%s", bytesRead, addr.String())
+			log.Info().Msg("trying to sync messages cache")
+
+			message, jsonMessage := models.NewMessage(models.Client{}, string(buffer[:bytesRead]))
+			err = s.cache.Set(ctx, fmt.Sprintf("message:%s", message.Id), jsonMessage)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to sync message in cache")
+				return
+			}
 
 			deadline := time.Now().Add(time.Second * configs.GetBlockingDeadline())
 			err = conn.SetWriteDeadline(deadline)

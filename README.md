@@ -9,13 +9,12 @@ It consists in two parts, the [client](client/README.md) and the [server](server
 1. General
    - [x] Define basic architecture
    - [x] Create Redis infrastructure ([1](https://aws.amazon.com/pt/elasticache/redis/]))
-     - [ ] Create user with password in ElastiCache
 2. Server
    - [x] Create base project
      - [x] Configure logging
    - [x] Receive messages from client
    - [ ] Broadcast messages to clients
-   - [ ] Save messages on Redis
+   - [x] Save messages on Redis
    - [ ] Read messages from Redis
    - [ ] Delete messages
    - [ ] Flush DB when no one is connected to chat server anymore

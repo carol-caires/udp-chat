@@ -14,8 +14,6 @@ type RedisImpl struct {
 func NewRedisConn() (*RedisImpl, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     configs.GetRedisAddr(),
-		Password: "", // no password set // todo: set password
-		DB:       0,  // use default DB
 	})
 	if rdb == nil {
 		return nil, errors.New("failed to create a connection on Redis")

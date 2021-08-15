@@ -1,7 +1,7 @@
 package configs
 
 import (
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
 	"time"
@@ -12,17 +12,18 @@ func GetHost() string {
 	if host != "" {
 		return host
 	}
-	panic("the HOST environment variable must be declared")
+	log.Fatal().Msg("the HOST environment variable must be declared")
+	return ""
 }
 
 func GetPort() int {
 	portStr := os.Getenv("PORT")
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		fmt.Println(err.Error())
-		panic("the PORT environment variable must be declared")
+		log.Fatal().Err(err).Msg("the PORT environment variable must be declared")
+		return 0
 	}
-	return int(port)
+	return port
 }
 
 func GetBlockingDeadline() time.Duration {
@@ -48,6 +49,7 @@ func GetRedisAddr() string {
 	if addr != "" {
 		return addr
 	}
-	panic("the HOST environment variable must be declared")
+	log.Fatal().Msg("the HOST environment variable must be declared")
+	return ""
 }
 
