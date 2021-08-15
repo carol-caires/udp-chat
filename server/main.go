@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/carol-caires/udp-chat/configs"
-	"github.com/carol-caires/udp-chat/internal/server"
-	"github.com/carol-caires/udp-chat/internal/utils/cache"
+	"github.com/carol-caires/udp-chat/internal/service"
+	"github.com/carol-caires/udp-chat/internal/infrastructure/cache"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -36,11 +36,11 @@ func main () {
 	}
 
 	var address = fmt.Sprintf("%s:%d", configs.GetHost(), configs.GetPort())
-	log.Info().Msgf("running UDP server on address %s", address)
+	log.Info().Msgf("running UDP service on address %s", address)
 
-	server := server.NewServer(redisConn)
+	server := service.NewServer(redisConn)
 	err = server.Listen(ctx, address)
 	if err != nil && err != context.Canceled {
-		log.Fatal().Err(err).Msg("error starting UDP server")
+		log.Fatal().Err(err).Msg("error starting UDP service")
 	}
 }

@@ -1,11 +1,11 @@
-package server
+package service
 
 import (
 	"context"
 	"fmt"
 	"github.com/carol-caires/udp-chat/configs"
-	"github.com/carol-caires/udp-chat/internal/models"
-	"github.com/carol-caires/udp-chat/internal/utils/cache"
+	"github.com/carol-caires/udp-chat/internal/infrastructure/cache"
+	"github.com/carol-caires/udp-chat/internal/model"
 	"github.com/rs/zerolog/log"
 	"net"
 	"time"
@@ -42,7 +42,12 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 			log.Debug().Msgf("packet-received: bytes=%d from=%s", bytesRead, addr.String())
 			log.Info().Msg("trying to sync messages cache")
 
-			message, jsonMessage := models.NewMessage(models.Client{}, string(buffer[:bytesRead]))
+			message, jsonMessage, err := model.NewMessage(string(buffer[:bytesRead]))
+			if err != nil {
+				log.Error().Err(err).Msgf("message have incorrect format: %s")
+				return
+			}
+
 			err = s.cache.Set(ctx, fmt.Sprintf("message:%s", message.Id), jsonMessage)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to sync message in cache")
@@ -70,7 +75,7 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 
 	select {
 	case <-ctx.Done():
-		fmt.Println("cancelled")
+		log.Info().Msg("cancelled")
 		err = ctx.Err()
 	case err = <-doneChan:
 	}
