@@ -13,26 +13,27 @@ import (
 
 type Server struct {
 	cache cache.Client
+	conn net.PacketConn
 }
 
 func NewServer (cache cache.Client) Server {
-	return Server{cache}
+	return Server{cache: cache}
 }
 
 func (s *Server) Listen(ctx context.Context, address string) (err error) {
-	conn, err := net.ListenPacket("udp", address)
+	s.conn, err = net.ListenPacket("udp", address)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to listen to packets")
 		return
 	}
-	defer conn.Close()
+	defer s.conn.Close()
 
 	doneChan := make(chan error, 1)
 	buffer := make([]byte, configs.GetMaxBufferSize())
 
 	go func() {
 		for {
-			bytesRead, addr, err := conn.ReadFrom(buffer)
+			bytesRead, addr, err := s.conn.ReadFrom(buffer)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to read from buffer")
 				doneChan <- err
@@ -45,31 +46,26 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 			message, jsonMessage, err := model.NewMessage(string(buffer[:bytesRead]))
 			if err != nil {
 				log.Error().Err(err).Msgf("message have incorrect format: %s")
-				return
-			}
-
-			err = s.cache.Set(ctx, fmt.Sprintf("message:%s", message.Id), jsonMessage)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to sync message in cache")
-				return
-			}
-
-			deadline := time.Now().Add(time.Second * configs.GetBlockingDeadline())
-			err = conn.SetWriteDeadline(deadline)
-			if err != nil {
-				log.Error().Err(err).Msg("failed set write blocking deadline")
 				doneChan <- err
 				return
 			}
 
-			bytesWritten, err := conn.WriteTo(buffer[:bytesRead], addr)
+			switch message.MessageType {
+			case model.MessageTypeMessage:
+				err = s.getConnectedClientsAndBroadcastMessage(ctx, message, jsonMessage)
+				break
+			case model.MessageTypeNewClient:
+				// todo: sync with clients array in redis
+				break
+			case model.MessageTypeCloseClient:
+				// todo: remove from clients array in redis
+				break
+			}
+
 			if err != nil {
-				log.Error().Err(err).Msg("failed set send packet to clients")
 				doneChan <- err
 				return
 			}
-
-			log.Debug().Msgf("packet-written: bytes=%d to=%s", bytesWritten, addr.String())
 		}
 	}()
 
@@ -80,5 +76,57 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 	case err = <-doneChan:
 	}
 
+	return
+}
+
+func (s *Server) getConnectedClientsAndBroadcastMessage(ctx context.Context, message *model.Message, jsonMessage string) (err error) {
+	clients, err := s.getConnectedClients(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("failed get connected clients")
+		return
+	}
+
+	err = s.broadcastMessage(clients, message.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to broadcast to clients")
+		return
+	}
+
+	err = s.cache.Set(ctx, fmt.Sprintf("message:%s", message.Id), jsonMessage)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to broadcast to sync message in cache")
+	}
+	return
+}
+
+func (s *Server) getConnectedClients(ctx context.Context) (clients []model.Client, err error) {
+	connClientsStr, err := s.cache.Get(ctx, "clients")
+	if err != nil {
+		return
+	}
+
+	clients, err = model.ParseClientsArray(connClientsStr)
+	return
+}
+
+func (s *Server) broadcastMessage(clients []model.Client, message string) (err error) {
+	deadline := time.Now().Add(time.Second * configs.GetBlockingDeadline())
+	err = s.conn.SetWriteDeadline(deadline)
+	if err != nil {
+		log.Error().Err(err).Msg("failed set write blocking deadline")
+		return
+	}
+
+	for _, client := range clients {
+		tcpAddr, _ := net.ResolveTCPAddr("ip", client.IpAddress)
+		bytesWritten, err := s.conn.WriteTo([]byte(message), tcpAddr)
+		if err != nil {
+			log.Error().Err(err).Msg("failed set send packet to clients")
+			return
+		}
+		log.Debug().Msgf("packet-written: bytes=%d to=%s", bytesWritten, client.IpAddress)
+	}
+
+	log.Info().Msg("finished to broadcast a new message to clients")
 	return
 }

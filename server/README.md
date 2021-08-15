@@ -7,6 +7,10 @@ This project follows [this standards](https://github.com/golang-standards/projec
 ## What do you need to run it
 - To configure a local Redis cluster to save clients and messages
 
+It currently only supports Redis. If do you want to support other cache providers, create a new implementation
+for every new provider to `cache.Client` interface in `server/internal/infrastructure/cache`. No need of changes 
+in service layer, make sure only to change the line ` cache.NewRedisConn()` to the new implementation constructor in main.
+
 ## Environment variables
 
 ```
