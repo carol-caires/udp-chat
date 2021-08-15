@@ -25,20 +25,19 @@ const (
 
 var validMessageTypes = []MessageType{MessageTypeNewMessage, MessageTypeDeleteMessage, MessageTypeNewClient, MessageTypeDeleteClient}
 
-func NewMessage(body string) (Message, string, error) {
+func ParseMessage(body string) (Message, string, error) {
 	var message Message
 	err := json.Unmarshal([]byte(body), &message)
 	if err != nil {
 		return Message{}, "", err
 	}
 
+	message.Id = uuid.New().String()
 	err = validateMessageType(message)
 	return message, body, err
 }
 
 func validateMessageType(message Message) error {
-	message.Id = uuid.New().String()
-
 	var isTypeValid bool
 	for _, t := range validMessageTypes {
 		if t == message.MessageType {

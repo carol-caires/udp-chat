@@ -42,9 +42,8 @@ func (s *Server) Listen(ctx context.Context, address string) (err error) {
 			}
 
 			log.Debug().Msgf("packet-received: bytes=%d from=%s", bytesRead, addr.String())
-			log.Info().Msg("trying to sync messages cache")
 
-			message, jsonMessage, err := model.NewMessage(string(buffer[:bytesRead]))
+			message, jsonMessage, err := model.ParseMessage(string(buffer[:bytesRead]))
 			if err != nil {
 				log.Error().Err(err).Msgf("message have incorrect format: %s", jsonMessage)
 				doneChan <- err
@@ -96,10 +95,12 @@ func (s *Server) getConnectedClientsAndBroadcastMessage(ctx context.Context, mes
 			return
 		}
 
+		log.Info().Msgf("trying to sync to messages cache: (%s) %s", message.Id, jsonMessage)
 		err = s.cache.Set(ctx, fmt.Sprintf("message:%s", message.Id), jsonMessage)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to broadcast to sync message in cache")
+			log.Error().Err(err).Msg("failed to sync message in cache")
 		}
+		log.Info().Msg("message broadcast and syncing completed successfully")
 	}
 	return
 }
