@@ -17,28 +17,26 @@ type Message struct {
 
 type MessageType string
 const (
-	MessageTypeMessage MessageType = "MESSAGE"
-	MessageTypeNewClient MessageType = "NEW_CLIENT"
-	MessageTypeCloseClient MessageType = "CLOSE_CLIENT"
+	MessageTypeNewMessage MessageType = "NEW_MESSAGE"
+	MessageTypeDeleteMessage MessageType = "DELETE_MESSAGE"
+	MessageTypeNewClient    MessageType = "NEW_CLIENT"
+	MessageTypeDeleteClient MessageType = "DELETE_CLIENT"
 )
 
-var validMessageTypes = []MessageType{MessageTypeMessage, MessageTypeNewClient, MessageTypeCloseClient}
+var validMessageTypes = []MessageType{MessageTypeNewMessage, MessageTypeDeleteMessage, MessageTypeNewClient, MessageTypeDeleteClient}
 
-func NewMessage(body string) (*Message, string, error) {
-	var message *Message
-	err := json.Unmarshal([]byte(body), message)
-
-	if message != nil {
-		err = validateMessageType(message)
-		if err != nil {
-			return nil, "", err
-		}
+func NewMessage(body string) (Message, string, error) {
+	var message Message
+	err := json.Unmarshal([]byte(body), &message)
+	if err != nil {
+		return Message{}, "", err
 	}
 
+	err = validateMessageType(message)
 	return message, body, err
 }
 
-func validateMessageType(message *Message) error {
+func validateMessageType(message Message) error {
 	message.Id = uuid.New().String()
 
 	var isTypeValid bool

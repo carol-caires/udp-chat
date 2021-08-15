@@ -13,7 +13,7 @@ in service layer, make sure only to change the line ` cache.NewRedisConn()` to t
 
 ## Environment variables
 
-```
+```shell
 # General service configuration
 HOST=127.0.0.1 # mandatory
 PORT=1337 # mandatory
@@ -27,3 +27,13 @@ REDIS_ADDR=localhost:6379 # mandatory
 ## How to run it
 
 ## How to test it
+
+You can send messages to this server manually, for example:
+
+```shell
+# create new client
+echo '{"type":"NEW_CLIENT", "from": {"name": "Carol"}}' | nc -w1 -u 127.0.0.1 1337
+
+# broadcast new message to clients
+echo '{"body":"olá","type":"NEW_MESSAGE", "from": {"name": "Carol"}}' | nc -w1 -u 127.0.0.1 1337
+```
